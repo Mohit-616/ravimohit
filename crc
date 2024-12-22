@@ -1,0 +1,73 @@
+import java.util.Scanner;
+
+public class CRCCheck {
+    // Method to perform XOR operation
+    private static String xor(String a, String b) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 1; i < b.length(); i++) {
+            result.append(a.charAt(i) == b.charAt(i) ? '0' : '1');
+        }
+        return result.toString();
+    }
+
+    // Method to perform CRC division
+    private static String performDivision(String data, String divisor) {
+        int divisorLength = divisor.length();
+        String temp = data.substring(0, divisorLength);
+
+        while (divisorLength < data.length()) {
+            if (temp.charAt(0) == '1') {
+                temp = xor(divisor, temp) + data.charAt(divisorLength);
+            } else {
+                temp = xor("0".repeat(divisorLength), temp) + data.charAt(divisorLength);
+            }
+            divisorLength++;
+        }
+
+        if (temp.charAt(0) == '1') {
+            temp = xor(divisor, temp);
+        } else {
+            temp = xor("0".repeat(divisorLength), temp);
+        }
+
+        return temp;
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Input data and divisor
+        System.out.print("Enter the data bits: ");
+        String data = scanner.nextLine();
+
+        System.out.print("Enter the divisor (polynomial): ");
+        String divisor = scanner.nextLine();
+
+        // Append zero bits to the data
+        String paddedData = data + "0".repeat(divisor.length() - 1);
+
+        // Calculate the CRC remainder
+        String remainder = performDivision(paddedData, divisor);
+
+        // Generate the transmitted data
+        String transmittedData = data + remainder;
+
+        System.out.println("CRC Remainder: " + remainder);
+        System.out.println("Transmitted Data (Data + CRC): " + transmittedData);
+
+        // Receiver side check
+        System.out.print("Enter the received data: ");
+        String receivedData = scanner.nextLine();
+
+        String checkRemainder = performDivision(receivedData, divisor);
+        boolean isValid = checkRemainder.replace("0", "").isEmpty();
+
+        if (isValid) {
+            System.out.println("No errors detected in the received data.");
+        } else {
+            System.out.println("Error detected in the received data.");
+        }
+
+        scanner.close();
+    }
+}
